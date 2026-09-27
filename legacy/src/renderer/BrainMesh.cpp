@@ -553,7 +553,7 @@ std::vector<char> BrainMesh::readFile(
     const std::streamsize size =
         file.tellg();
 
-    if (size <= 0 || size % 4 != 0)
+    if (size <= 0)
     {
         throw std::runtime_error(
             "Shader file is empty: " +
@@ -576,7 +576,6 @@ std::vector<char> BrainMesh::readFile(
         size
     );
 
-    if (!file) throw std::runtime_error("Incomplete shader read: " + path);
     return buffer;
 }
 
@@ -644,9 +643,11 @@ bool BrainMesh::createGraphicsPipeline(
             vertexCode
         );
 
-    VkShaderModule fragmentModule = VK_NULL_HANDLE;
-    try { fragmentModule = createShaderModule(device, fragmentCode); }
-    catch (...) { vkDestroyShaderModule(device, vertexModule, nullptr); throw; }
+    const VkShaderModule fragmentModule =
+        createShaderModule(
+            device,
+            fragmentCode
+        );
 
     VkPipelineShaderStageCreateInfo
         vertexStage{};
@@ -1171,7 +1172,7 @@ void BrainMesh::draw(
         glm::vec4(
             std::clamp(
                 settings.opacity,
-                0.0f,
+                0.02f,
                 1.0f
             ),
             std::clamp(
@@ -1182,10 +1183,6 @@ void BrainMesh::draw(
             settings.activityEnabled,
             settings.time
         );
-
-    constants.cameraPosition = glm::vec4(camera.position(), 1.0f);
-    constants.visualization = glm::vec4(settings.density, float(settings.colorScheme), 0.0f, 0.0f);
-    static_assert(sizeof(PushConstants) == 112);
 
     vkCmdPushConstants(
         commandBuffer,

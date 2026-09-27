@@ -1,26 +1,17 @@
 #pragma once
-
-#include <glm/mat4x4.hpp>
-
-class Camera
-{
+#include <glm/glm.hpp>
+class Camera {
 public:
-    void update(
-        float mouseDeltaX,
-        float mouseDeltaY,
-        float wheelDelta,
-        bool viewportHovered,
-        bool dragging
-    );
-
+    void update(float dx, float dy, float wheel, bool hovered, bool dragging);
+    void setView(int view);
+    glm::vec3 position() const;
     glm::mat4 viewMatrix() const;
-
-    glm::mat4 projectionMatrix(
-        float aspect
-    ) const;
-
+    glm::mat4 projectionMatrix(float aspect) const;
+    float yaw() const { return yaw_; }
+    float pitch() const { return pitch_; }
+    float distance() const { return distance_; }
 private:
     float yaw_ = 0.0f;
     float pitch_ = 0.15f;
-    float distance_ = 3.0f;
+    float distance_ = 3.6f;
 };

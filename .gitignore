@@ -27,3 +27,11 @@ CMakeLists.txt.user
 # Temporary files
 *.log
 *.tmp
+# Windows / additional build trees
+.vs/
+out/
+build-*/
+*.obj
+*.pdb
+*.dll
+captures/

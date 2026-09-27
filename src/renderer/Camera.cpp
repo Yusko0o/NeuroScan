@@ -1,82 +1,36 @@
 #include "Camera.hpp"
-
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/ext/matrix_clip_space.hpp>
 #include <algorithm>
 #include <cmath>
-
-void Camera::update(
-    float mouseDeltaX,
-    float mouseDeltaY,
-    float wheelDelta,
-    bool viewportHovered,
-    bool dragging
-)
-{
-    if (!viewportHovered)
-    {
-        return;
+void Camera::update(float dx, float dy, float wheel, bool hovered, bool dragging) {
+    if (!hovered || !std::isfinite(dx) || !std::isfinite(dy) || !std::isfinite(wheel)) return;
+    if (dragging) {
+        yaw_ = std::remainder(yaw_ - dx * 0.008f, 6.2831853f);
+        pitch_ = std::clamp(pitch_ - dy * 0.008f, -1.55f, 1.55f);
     }
-
-    if (dragging)
-    {
-        yaw_ -= mouseDeltaX * 0.008f;
-        pitch_ -= mouseDeltaY * 0.008f;
-
-        pitch_ = std::clamp(
-            pitch_,
-            -1.35f,
-            1.35f
-        );
+    distance_ = std::clamp(distance_ * std::exp(-wheel * 0.12f), 1.3f, 12.0f);
+}
+void Camera::setView(int view) {
+    *this = Camera{};
+    switch (view) {
+    case 1: yaw_ = 0; pitch_ = 0; break;
+    case 2: yaw_ = 1.5707963f; pitch_ = 0; break;
+    case 3: yaw_ = 0; pitch_ = 1.55f; break;
+    case 4: yaw_ = 3.1415927f; pitch_ = 0; break;
+    default: break;
     }
-
-    distance_ -= wheelDelta * 0.22f;
-
-    distance_ = std::clamp(
-        distance_,
-        1.3f,
-        8.0f
-    );
 }
-
-glm::mat4 Camera::viewMatrix() const
-{
-    const float cosPitch =
-        std::cos(pitch_);
-
-    const glm::vec3 position(
-        distance_ *
-            cosPitch *
-            std::sin(yaw_),
-
-        distance_ *
-            std::sin(pitch_),
-
-        distance_ *
-            cosPitch *
-            std::cos(yaw_)
-    );
-
-    return glm::lookAt(
-        position,
-        glm::vec3(0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
+glm::vec3 Camera::position() const {
+    return distance_ * glm::vec3(std::cos(pitch_) * std::sin(yaw_), std::sin(pitch_),
+                                 std::cos(pitch_) * std::cos(yaw_));
 }
-
-glm::mat4 Camera::projectionMatrix(
-    float aspect
-) const
-{
-    glm::mat4 projection =
-        glm::perspective(
-            glm::radians(45.0f),
-            aspect,
-            0.01f,
-            100.0f
-        );
-
-    projection[1][1] *= -1.0f;
-
-    return projection;
+glm::mat4 Camera::viewMatrix() const {
+    return glm::lookAt(position(), glm::vec3(0), glm::vec3(0, 1, 0));
+}
+glm::mat4 Camera::projectionMatrix(float aspect) const {
+    if (!std::isfinite(aspect) || aspect <= 0) aspect = 1;
+    auto p = glm::perspectiveRH_ZO(glm::radians(45.0f), aspect, 0.01f, 100.0f);
+    p[1][1] *= -1;
+    return p;
 }

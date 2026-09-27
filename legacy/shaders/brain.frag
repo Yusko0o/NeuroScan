@@ -10,8 +10,6 @@ layout(push_constant) uniform PushConstants
     mat4 mvp;
 
     vec4 renderSettings;
-    vec4 cameraPosition;
-    vec4 visualization;
 } pc;
 
 float hash31(vec3 p)
@@ -177,7 +175,7 @@ void main()
     float opacity =
         clamp(
             pc.renderSettings.x,
-            0.0,
+            0.02,
             1.0
         );
 
@@ -201,7 +199,12 @@ void main()
 
     vec3 viewDirection =
         normalize(
-            pc.cameraPosition.xyz - fragPosition
+            -fragPosition +
+            vec3(
+                0.0,
+                0.0,
+                2.0
+            )
         );
 
     vec3 lightDirection1 =
@@ -293,7 +296,7 @@ void main()
 
     vec3 electricBlue =
         vec3(
-            0.0,
+            0.02,
             0.58,
             1.00
         );
@@ -402,13 +405,9 @@ void main()
 
     float sparkMask =
         step(
-            mix(1.0, 0.94, pc.visualization.x),
+            0.975,
             randomSpark
         );
-
-    // Localize each hashed cell to a small round spark instead of a square tile.
-    vec3 cellOffset = fract(fragPosition * 22.0) - vec3(0.5);
-    sparkMask *= 1.0 - smoothstep(0.12, 0.42, length(cellOffset));
 
     float sparkPulse =
         0.5 +
@@ -450,17 +449,23 @@ void main()
             )
         );
 
-    if (pc.visualization.y > 1.5) {
-        float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-        color = vec3(luminance);
-    } else if (pc.visualization.y > 0.5) {
-        color = color.bgr;
-    }
-
     float finalAlpha =
         opacity;
 
-    finalAlpha = clamp(opacity * (1.0 + fresnel * 0.08 + activity * 0.08), 0.0, 1.0);
+    finalAlpha +=
+        fresnel *
+        0.08;
+
+    finalAlpha +=
+        activity *
+        0.08;
+
+    finalAlpha =
+        clamp(
+            finalAlpha,
+            0.03,
+            1.0
+        );
 
     outColor =
         vec4(

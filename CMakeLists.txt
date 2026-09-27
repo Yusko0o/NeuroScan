@@ -1,165 +1,50 @@
 cmake_minimum_required(VERSION 3.24)
-
-project(NeuroScan LANGUAGES CXX)
-
+project(NeuroScan VERSION 0.2.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-include(FetchContent)
-
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
+set(CMAKE_AUTOMOC ON)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick QuickControls2)
 find_package(Vulkan REQUIRED)
-find_package(assimp REQUIRED)
-
-FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.91.8
-)
-
-FetchContent_MakeAvailable(imgui)
-
-add_library(imgui_lib STATIC
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
-)
-
-target_include_directories(imgui_lib PUBLIC
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
-)
-
-target_link_libraries(imgui_lib PUBLIC
-    glfw
-    Vulkan::Vulkan
-)
-
-if(APPLE)
-    target_compile_definitions(
-        imgui_lib
-        PRIVATE
-        VK_ENABLE_BETA_EXTENSIONS
-    )
-endif()
-
+find_package(glm CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 if(NOT Vulkan_GLSLC_EXECUTABLE)
-    find_program(
-        Vulkan_GLSLC_EXECUTABLE
-        NAMES glslc
-        REQUIRED
-    )
+    find_program(Vulkan_GLSLC_EXECUTABLE NAMES glslc HINTS "$ENV{VULKAN_SDK}/Bin" REQUIRED)
 endif()
-
-set(
-    SHADER_OUTPUT_DIR
-    ${CMAKE_CURRENT_BINARY_DIR}/shaders
-)
-
-file(
-    MAKE_DIRECTORY
-    ${SHADER_OUTPUT_DIR}
-)
-
-add_custom_command(
-    OUTPUT
-        ${SHADER_OUTPUT_DIR}/brain.vert.spv
-
-    COMMAND
-        ${Vulkan_GLSLC_EXECUTABLE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.vert
-        -o
-        ${SHADER_OUTPUT_DIR}/brain.vert.spv
-
-    DEPENDS
-        ${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.vert
-
-    VERBATIM
-)
-
-add_custom_command(
-    OUTPUT
-        ${SHADER_OUTPUT_DIR}/brain.frag.spv
-
-    COMMAND
-        ${Vulkan_GLSLC_EXECUTABLE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.frag
-        -o
-        ${SHADER_OUTPUT_DIR}/brain.frag.spv
-
-    DEPENDS
-        ${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.frag
-
-    VERBATIM
-)
-
-add_custom_target(
-    NeuroScanShaders
-    DEPENDS
-        ${SHADER_OUTPUT_DIR}/brain.vert.spv
-        ${SHADER_OUTPUT_DIR}/brain.frag.spv
-)
-
-add_executable(
-    NeuroScan
-
-    src/main.cpp
-
-    src/core/Application.cpp
-
-    src/renderer/VulkanContext.cpp
-    src/renderer/VulkanDevice.cpp
-    src/renderer/VulkanSwapchain.cpp
-    src/renderer/VulkanRenderer.cpp
-
-    src/renderer/BrainMesh.cpp
-    src/renderer/Camera.cpp
-
-    src/ui/NeuroUi.cpp
-)
-
-add_dependencies(
-    NeuroScan
-    NeuroScanShaders
-)
-
-target_include_directories(
-    NeuroScan
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(
-    NeuroScan
-    PRIVATE
-
-    glfw
-    glm::glm
-    Vulkan::Vulkan
-    assimp::assimp
-    imgui_lib
-)
-
-target_compile_definitions(
-    NeuroScan
-    PRIVATE
-
-    NEUROSCAN_MODEL_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/models/brain.glb"
-
-    NEUROSCAN_VERT_SHADER="${SHADER_OUTPUT_DIR}/brain.vert.spv"
-
-    NEUROSCAN_FRAG_SHADER="${SHADER_OUTPUT_DIR}/brain.frag.spv"
-)
-
-if(APPLE)
-    target_compile_definitions(
-        NeuroScan
-        PRIVATE
-        VK_ENABLE_BETA_EXTENSIONS
-    )
+set(SHADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+file(MAKE_DIRECTORY "${SHADER_DIR}")
+foreach(stage vert frag)
+    add_custom_command(OUTPUT "${SHADER_DIR}/brain.${stage}.spv"
+        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.${stage}"
+                -o "${SHADER_DIR}/brain.${stage}.spv"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/brain.${stage}" VERBATIM)
+endforeach()
+add_custom_target(NeuroScanShaders DEPENDS "${SHADER_DIR}/brain.vert.spv" "${SHADER_DIR}/brain.frag.spv")
+qt_add_executable(NeuroScan src/main.cpp src/qt/BrainViewport.cpp src/qt/BrainViewport.hpp
+    src/qt/BrainTextureNode.cpp src/qt/BrainTextureNode.hpp
+    src/renderer/BrainMesh.cpp src/renderer/Camera.cpp)
+qt_add_resources(NeuroScan "ui" PREFIX "/" FILES qml/Main.qml)
+add_dependencies(NeuroScan NeuroScanShaders)
+target_include_directories(NeuroScan PRIVATE src)
+target_link_libraries(NeuroScan PRIVATE Qt6::Quick Qt6::QuickControls2 Vulkan::Vulkan glm::glm assimp::assimp)
+target_compile_definitions(NeuroScan PRIVATE GLM_FORCE_DEPTH_ZERO_TO_ONE NOMINMAX)
+if(MSVC)
+    target_compile_options(NeuroScan PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(NeuroScan PRIVATE -Wall -Wextra -Wpedantic -Wno-missing-field-initializers)
+endif()
+# Keep runtime data beside the executable, independent of the working directory.
+add_custom_target(NeuroScanRuntime ALL
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:NeuroScan>/assets/models"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:NeuroScan>/shaders"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/brain.glb" "$<TARGET_FILE_DIR:NeuroScan>/assets/models/brain.glb"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${SHADER_DIR}/brain.vert.spv" "${SHADER_DIR}/brain.frag.spv" "$<TARGET_FILE_DIR:NeuroScan>/shaders"
+    DEPENDS NeuroScan NeuroScanShaders VERBATIM)
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(CameraTest tests/CameraTest.cpp src/renderer/Camera.cpp)
+    target_include_directories(CameraTest PRIVATE src)
+    target_link_libraries(CameraTest PRIVATE glm::glm)
+    target_compile_definitions(CameraTest PRIVATE GLM_FORCE_DEPTH_ZERO_TO_ONE)
+    add_test(NAME CameraMath COMMAND CameraTest)
 endif()

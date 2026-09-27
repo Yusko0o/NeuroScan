@@ -10,8 +10,6 @@ layout(push_constant) uniform PushConstants
 {
     mat4 mvp;
     vec4 renderSettings;
-    vec4 cameraPosition;
-    vec4 visualization;
 } pc;
 
 void main()

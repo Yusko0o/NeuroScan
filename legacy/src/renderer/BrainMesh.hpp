@@ -27,15 +27,9 @@ public:
         float brightness = 0.74f;
         float activityEnabled = 1.0f;
         float time = 0.0f;
-        float density = 0.5f;
-        int colorScheme = 0;
     };
 
 public:
-    BrainMesh() = default;
-    BrainMesh(const BrainMesh&) = delete;
-    BrainMesh& operator=(const BrainMesh&) = delete;
-    size_t triangleCount() const { return indices_.size() / 3; }
     bool initialize(
         VkPhysicalDevice physicalDevice,
         VkDevice device,
@@ -67,8 +61,6 @@ private:
     {
         glm::mat4 mvp;
         glm::vec4 renderSettings;
-        glm::vec4 cameraPosition;
-        glm::vec4 visualization;
     };
 
 private:

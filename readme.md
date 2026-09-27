@@ -1,495 +1,194 @@
-# NeuroScan
+# NeuroScan — 3D Visualization Engine
 
-**NeuroScan** is an experimental brain visualization and neural signal analysis platform built with **C++20, Vulkan, GLSL and Qt Quick**.
+**An experimental C++20 / Vulkan rendering engine with an interactive Qt Quick interface.**
 
-The project explores how biological brain signals could be acquired, processed and represented on an interactive 3D anatomical model of the human brain.
+NeuroScan explores real-time 3D rendering, GPU resource management and the integration of native Vulkan graphics into a desktop application. A detailed brain mesh serves as the demonstration scene for interactive camera navigation, custom GLSL shading and procedural animation.
 
-The long-term objective is to connect **external stimuli, biosignal acquisition, signal processing and real-time 3D visualization** within a single software platform.
+The current implementation is a specialized visualization engine built around this scene. It is not yet a general-purpose game engine or a scene editor.
 
-> NeuroScan is currently under active development and is not a medical device.
+![NeuroScan rendering the included GLB model](docs/apercu.png)
 
----
+## Features
 
-## Project Vision
+### Vulkan rendering
 
-NeuroScan was originally conceived as more than a 3D brain viewer.
+- Indexed rendering of the included GLB mesh, imported through Assimp.
+- Custom vertex and fragment shaders compiled to SPIR-V during the build.
+- Depth testing, alpha blending, dynamic viewport and scissor.
+- Offscreen color and depth targets, with the color image imported into Qt Quick.
+- Shader parameters supplied through Vulkan push constants.
+- Surface lighting, view-dependent Fresnel effects and procedural animated hotspots.
 
-The idea is to build an experimental platform capable of combining measurements of brain activity with a detailed digital representation of the human brain.
+The included scene contains **195,887 vertices and 377,701 triangles** after import in the tested build.
 
-One of the main concepts explored by the project is the brain's response to an external stimulus.
+### Interactive viewport
 
-For example, when a person hears a spoken word or a sound:
+- Orbital camera controlled by mouse dragging.
+- Mouse-wheel and trackpad zoom, plus on-screen zoom controls.
+- Camera reset and presets aligned with the model axes.
+- Adjustable transparency and brightness.
+- Cyan, amber and monochrome palettes.
+- Adjustable density of procedural spark effects.
+- Surface visibility and activity-effect toggles.
+- Playback, pause and scrubbing through a 120-second procedural animation loop.
+- Viewport resizing and device-pixel-ratio-aware render targets.
 
-```text
-Spoken Word / Sound
-        │
-        ▼
-Auditory Stimulus
-        │
-        ▼
-Biological Response
-        │
-        ▼
-EEG / Sensors
-        │
-        ▼
-Signal Acquisition
-        │
-        ▼
-Signal Processing & Analysis
-        │
-        ▼
-Brain Region Estimation
-        │
-        ▼
-NeuroScan Visualization Engine
-        │
-        ▼
-Interactive 3D Activity Visualization
-```
+### Desktop interface
 
-The objective is to investigate how measurable biosignals can be processed and associated with anatomical brain regions, allowing changes in measured activity to be visualized on a 3D brain model.
+- Qt Quick / QML dashboard with visualization controls and scene information.
+- GPU device name and imported triangle count.
+- Camera orientation and distance readout.
+- Visible initialization and model-loading errors.
+- Separate GUI and rendering responsibilities.
 
-NeuroScan does **not** assume that technologies such as scalp EEG can directly observe individual neurons or perfectly reconstruct the propagation of neural signals.
+The animated effects are generated mathematically. The application does not currently acquire EEG signals, simulate biological neural networks or reconstruct measured brain activity.
 
-Instead, the project aims to explore what information can realistically be extracted from available sensors and how that information can be represented visually.
+## Technology
 
----
-
-## Current Development
-
-The project is currently focused on building the **visualization engine and application architecture** required for the future signal-processing pipeline.
-
-The current implementation already includes a functional Vulkan-based 3D renderer capable of displaying a detailed anatomical brain model.
-
-Current development areas include:
-
-- Real-time 3D brain rendering
-- Anatomical GLB model loading
-- Interactive camera controls
-- Custom GLSL brain shaders
-- Procedural neural activity visualization
-- Adjustable rendering parameters
-- Qt Quick / QML scientific interface
-- Modular C++ rendering architecture
-
-The neural activity currently displayed by the shaders is **simulated** and is not derived from real neurological measurements.
-
----
-
-## Tech Stack
-
-### Core
-
-- **C++20**
-- **CMake**
-
-### Graphics
-
-- **Vulkan**
-- **GLSL**
-- **GLM**
-- **Assimp**
-
-### Interface
-
-- **Qt 6**
-- **Qt Quick**
-- **QML**
-
-### Data & Models
-
-- GLB / glTF anatomical models
-
-Future versions of the project may introduce dedicated signal-processing and machine-learning components.
-
----
-
-## 3D Visualization Engine
-
-NeuroScan uses Vulkan as its primary rendering API.
-
-The renderer currently supports:
-
-- Vertex and index buffers
-- Depth testing
-- Alpha blending
-- Dynamic viewport and scissor
-- Perspective projection
-- Anatomical mesh normalization
-- Surface lighting
-- Fresnel effects
-- Procedural activity effects
-- GPU-driven visualization through GLSL shaders
-
-A detailed anatomical brain model can be loaded using Assimp and rendered directly by the Vulkan pipeline.
-
----
-
-## Neural Activity Visualization
-
-The current fragment shader contains procedural activity regions designed to prototype how neural activity could eventually be represented.
-
-The visualization includes:
-
-- Animated activity hotspots
-- Pulsating regions
-- Surface illumination
-- Electric blue and cyan activity
-- High-activity color transitions
-- Procedural signal variations
-
-At the moment, these signals are generated mathematically by the shader.
-
-```text
-CURRENT
-
-Procedural Simulation
-        │
-        ▼
-GLSL Activity Model
-        │
-        ▼
-Vulkan Renderer
-        │
-        ▼
-3D Brain
-```
-
-The long-term architecture is intended to evolve toward:
-
-```text
-FUTURE
-
-EEG / Biosensors
-        │
-        ▼
-Signal Acquisition
-        │
-        ▼
-Filtering & Processing
-        │
-        ▼
-Signal Analysis
-        │
-        ▼
-Source / Region Estimation
-        │
-        ▼
-Visualization Data
-        │
-        ▼
-Vulkan Renderer
-        │
-        ▼
-Interactive 3D Brain
-```
-
-This separation allows the visualization engine to be developed before physical sensors and signal-processing systems are introduced.
-
----
-
-## Interactive Camera
-
-The current renderer includes an orbital camera system for exploring the anatomical model.
-
-It supports:
-
-- Brain rotation
-- Zoom
-- Perspective projection
-- Viewport-based interaction
-
-Future versions are planned to provide dedicated anatomical viewpoints and region-focused navigation.
-
----
-
-## User Interface
-
-NeuroScan is transitioning to a **Qt Quick / QML interface** while keeping the performance-critical rendering engine in C++ and Vulkan.
-
-The interface is designed around a scientific dashboard containing components such as:
-
-- Brain visualization viewport
-- Anatomical layer controls
-- Transparency controls
-- Brightness controls
-- Activity visualization controls
-- Brain region information
-- Activity monitoring
-- Time controls
-- Neuron inspection
-- Session information
-
-The goal is to keep the rendering engine and interface separated so that both systems can evolve independently.
-
----
+| Component | Technology |
+|---|---|
+| Application and renderer | C++20 |
+| Graphics API | Vulkan |
+| GPU shaders | GLSL / SPIR-V |
+| Desktop interface | Qt 6, Qt Quick, QML, Quick Controls |
+| Mesh import | Assimp |
+| Vector and matrix operations | GLM |
+| Build and tests | CMake, CTest |
 
 ## Architecture
 
-```text
-NeuroScan
-│
-├── User Interface
-│   └── Qt Quick / QML
-│
-├── Visualization Engine
-│   ├── C++20
-│   ├── Vulkan
-│   └── GLSL
-│
-├── Anatomical Data
-│   ├── GLB / glTF
-│   └── Brain regions
-│
-├── Signal Processing            [Planned]
-│   ├── Filtering
-│   ├── Frequency analysis
-│   ├── Artifact handling
-│   └── Feature extraction
-│
-└── Biosignal Acquisition        [Planned]
-    ├── EEG
-    └── Other compatible sensors
-```
+| Component | Responsibility |
+|---|---|
+| `qml/Main.qml` | Layout, controls and property bindings |
+| `BrainViewport` | GUI-side state, input handling and animation time |
+| `BrainTextureNode` | Render-thread integration, offscreen targets and texture import |
+| `BrainMesh` | Mesh import, normalization, vertex/index buffers and graphics pipeline |
+| `Camera` | Orbital navigation and Vulkan-compatible projection |
+| `brain.vert` / `brain.frag` | Vertex transformation, lighting and procedural effects |
 
-Current source structure:
+Qt owns the Vulkan instance, device, graphics queue, swapchain and frame submission. NeuroScan uses Qt's device and command buffer to record its own rendering commands into an offscreen target before the Qt Quick render pass.
 
-```text
-NeuroScan/
-│
-├── assets/
-│   └── models/
-│       └── brain.glb
-│
-├── qml/
-│   ├── Main.qml
-│   └── components/
-│
-├── shaders/
-│   ├── brain.vert
-│   └── brain.frag
-│
-├── src/
-│   ├── main.cpp
-│   │
-│   ├── qt/
-│   │   └── BrainViewport
-│   │
-│   └── renderer/
-│       ├── BrainMesh
-│       └── Camera
-│
-├── CMakeLists.txt
-├── .gitignore
-└── README.md
-```
+The resulting image is exposed through `QSGVulkanTexture::fromNative` and displayed as part of the QML scene. The interactive viewport does not require a CPU readback of the rendered brain.
 
----
+Mutable camera and rendering settings are copied during scene-graph synchronization, while the GUI thread is blocked. GPU resources belong to the render-thread scene-graph node and are recreated when needed. Device-idle waits are used during target replacement and destruction, rather than in the normal frame loop.
 
-## Roadmap
+The earlier GLFW/ImGui implementation is preserved in `legacy/` for reference and is excluded from the current build.
 
-### Phase 1 — Visualization Engine
-
-- [x] Vulkan initialization
-- [x] Vulkan rendering pipeline
-- [x] Anatomical GLB brain loading
-- [x] GPU brain rendering
-- [x] Depth testing
-- [x] Interactive orbital camera
-- [x] Custom GLSL brain shaders
-- [x] Procedural activity visualization
-
-### Phase 2 — Application Interface
-
-- [x] Initial visualization controls
-- [ ] Complete Qt Quick interface
-- [ ] Integrate Vulkan rendering into the Qt Quick viewport
-- [ ] Anatomical layer controls
-- [ ] Brain region selection
-- [ ] Region metadata
-- [ ] Activity heatmaps
-- [ ] Session controls
-- [ ] Recording and playback
-
-### Phase 3 — Brain Data
-
-- [ ] Anatomical brain region mapping
-- [ ] Coordinate system for activity data
-- [ ] Brain atlas integration
-- [ ] Region-based activity representation
-- [ ] Time-dependent activity visualization
-
-### Phase 4 — Biosignal Processing
-
-- [ ] EEG acquisition
-- [ ] Signal filtering
-- [ ] Artifact handling
-- [ ] Frequency-band analysis
-- [ ] Signal feature extraction
-- [ ] Brain-region estimation
-- [ ] Real-time visualization pipeline
-
-### Phase 5 — Experimental Analysis
-
-- [ ] Stimulus synchronization
-- [ ] Auditory experiment support
-- [ ] Event markers
-- [ ] Session comparison
-- [ ] Activity pattern analysis
-- [ ] Experimental ML models
-
----
-
-## Experimental Auditory Pipeline
-
-One of the long-term experiments envisioned for NeuroScan involves studying responses to auditory stimuli.
-
-A simplified experimental pipeline could be:
-
-```text
-              AUDITORY EXPERIMENT
-
-                    Sound
-                      │
-                      ▼
-              ┌───────────────┐
-              │   Participant │
-              └───────┬───────┘
-                      │
-                      ▼
-               Brain Response
-                      │
-                      ▼
-              ┌───────────────┐
-              │ EEG / Sensors │
-              └───────┬───────┘
-                      │
-                      ▼
-              Signal Acquisition
-                      │
-                      ▼
-           Filtering / Processing
-                      │
-                      ▼
-             Activity Estimation
-                      │
-                      ▼
-              Anatomical Mapping
-                      │
-                      ▼
-              ┌───────────────┐
-              │   NeuroScan   │
-              └───────┬───────┘
-                      │
-                      ▼
-             Interactive 3D View
-```
-
-The purpose would be to compare measured brain activity before, during and after controlled stimuli and visualize the resulting data spatially and temporally.
-
----
-
-## Building
+## Build and run
 
 ### Requirements
 
-NeuroScan currently requires:
+- CMake **3.24+**.
+- A **C++20** compiler.
+- Qt **6.4+**, including Qt Quick and Quick Controls 2.
+- Vulkan headers, loader, a compatible driver and the **`glslc`** shader compiler.
+- Assimp and GLM.
 
-- CMake 3.24+
-- C++20 compatible compiler
-- Vulkan
-- Qt 6
-- GLM
-- Assimp
+The application explicitly selects the Vulkan backend. It does not provide an OpenGL or Metal fallback.
 
-### macOS
+### Windows
 
-The project is currently primarily developed on **Apple Silicon**.
+The following commands use the project's Windows setup: Visual Studio 18 2026, Qt 6.11.2 MSVC x64 and vcpkg. Adjust the paths and generator to match your installation.
 
-Dependencies can be installed using Homebrew:
+Run from the project directory containing `CMakeLists.txt`:
 
-```bash
-brew install cmake
-brew install qt
-brew install glm
-brew install assimp
-brew install vulkan-loader
+```bat
+C:\dev\vcpkg\vcpkg.exe install assimp:x64-windows glm:x64-windows
+
+cmake -S . -B build-qt -G "Visual Studio 18 2026" -A x64 -DCMAKE_PREFIX_PATH="C:\Qt\6.11.2\msvc2022_64" -DCMAKE_TOOLCHAIN_FILE="C:\dev\vcpkg\scripts\buildsystems\vcpkg.cmake"
+
+cmake --build build-qt --config Release --parallel
+
+"C:\Qt\6.11.2\msvc2022_64\bin\windeployqt.exe" --release --qmldir qml build-qt\Release\NeuroScan.exe
+
+build-qt\Release\NeuroScan.exe
 ```
 
-Configure the project:
+Use a fresh build directory when migrating from the previous GLFW implementation. Ensure `glslc` is discoverable through the Vulkan SDK or your `PATH`.
 
-```bash
-cmake -S . -B build \
-    -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
+The default build copies the model and compiled shaders next to the executable through the `NeuroScanRuntime` target. Build the default target as shown above so this step runs. Keep the `assets/` and `shaders/` directories, Qt runtime files and Assimp dependencies alongside the executable when distributing a build.
+
+### Linux
+
+With the development dependencies above and Ninja installed:
+
+```sh
+cmake -S . -B build-qt -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build-qt --parallel
+./build-qt/NeuroScan
 ```
 
-Compile:
+Runtime asset paths are resolved relative to the executable, independently of the working directory.
 
-```bash
-cmake --build build -j
+## Controls
+
+| Action | Input |
+|---|---|
+| Orbit | Hold the left mouse button and drag inside the viewport |
+| Zoom | Mouse wheel, trackpad or + / − buttons |
+| Reset camera | Double-click, reset button or R |
+| Change view | +Z, +X, +Y and −Z buttons |
+| Play / pause | Playback button or Space when not intercepted by a focused control |
+| Scrub animation | Drag the timeline; playback pauses |
+| Access additional controls | Scroll the side panels |
+
+View presets use the imported model's axes; they are not atlas-registered anatomical views.
+
+## Testing and validation
+
+```bat
+ctest --test-dir build-qt -C Release --output-on-failure
+build-qt\Release\NeuroScan.exe --smoke-test captures
 ```
 
-Run:
+`CameraTest` checks camera bounds, finite matrices, view presets and the Vulkan depth range. The application smoke test exercises mouse input, rendering settings, resizing, scene-graph recreation and surface visibility, and saves seven screenshots for inspection.
 
-```bash
-./build/NeuroScan
-```
+| Environment | Verification |
+|---|---|
+| Windows, project owner's PC | Successful compilation and launch confirmed by the owner |
+| Linux, Qt 6.4.2, Mesa llvmpipe | Compilation, camera tests, Vulkan rendering, input, resizing, 150% display scaling and missing-model handling tested during development |
+| macOS / MoltenVK | Not validated for this version |
 
-Depending on the Vulkan installation, additional MoltenVK or Vulkan SDK configuration may be required on macOS.
+Standard Vulkan validation reported no errors in the final Linux smoke tests. Extended synchronization validation produced diagnostics involving Qt-managed presentation and buffer operations; presentation diagnostics also reproduced in a Qt-only baseline. These findings remain documented rather than treated as fully resolved.
 
----
+See [the detailed validation report](docs/VALIDATION.md) for test coverage and logs. That report records the original Linux delivery; the Windows build-and-launch confirmation was obtained afterwards. Linux tests used a software Vulkan implementation and are not RTX 4060 performance benchmarks.
 
-## Scientific Scope
+## Current limitations
 
-NeuroScan is primarily a **software engineering, graphics and experimental neuroscience visualization project**.
+- A single predefined demonstration scene; no general scene editor or runtime model browser.
+- Mesh geometry and normals are imported, but glTF materials and textures are not rendered.
+- Conventional alpha blending with depth testing; no order-independent transparency.
+- Synchronous model loading at initialization and scene-graph recreation.
+- Static mesh buffers use host-visible coherent memory; no staging/device-local upload path yet.
+- Render targets are capped at 4096 pixels per dimension while preserving aspect ratio.
+- No session persistence, recording, external signal import or EEG acquisition.
+- No anatomical segmentation, atlas mapping or individual-neuron representation.
 
-The project makes an important distinction between:
+## Rendering roadmap
 
-```text
-Measured signal
-      ≠
-Exact neural activity
-      ≠
-Individual neuron activity
-```
+Planned work, not current functionality:
 
-Signals recorded outside the brain are indirect measurements and have physical and spatial limitations.
+- [ ] Save and restore camera and visualization presets.
+- [ ] Add runtime model selection and stronger import diagnostics.
+- [ ] Profile GPU time and memory usage on hardware Vulkan devices.
+- [ ] Introduce asynchronous loading and staging-buffer uploads where profiling justifies them.
+- [ ] Improve transparency for overlapping surfaces.
+- [ ] Expand lighting and material controls.
+- [ ] Add independently selectable scene objects and rendering layers.
+- [ ] Extend automated build and rendering validation.
 
-For this reason, future NeuroScan features involving EEG or other biosignals will distinguish between:
+## Development
 
-- Raw measurements
-- Processed signals
-- Estimated activity
-- Simulated activity
-- Anatomical information
+NeuroScan is a personal graphics-programming project by **Kilian Berardino**. Its development focuses on understanding rendering architecture, connecting a native graphics API to a desktop UI and making interactive rendering behavior testable.
 
-This distinction is important for keeping visualizations scientifically interpretable.
+AI assistance was used substantially for the Qt Quick/Vulkan integration, implementation, debugging and documentation. The Windows build and launch were checked by the project owner; the Linux verification described above was performed in the AI-assisted development environment.
 
----
+## Model attribution
 
-## Project Status
+The included `brain.glb` identifies the following source and license in its embedded metadata:
 
-**Experimental — Active Development**
+- **Model:** [Brain](https://sketchfab.com/3d-models/brain-cadd2bde67404c43b2359a6a3281d84a)
+- **Author:** [dgallichan](https://sketchfab.com/dgallichan)
+- **License:** [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
-The core Vulkan brain renderer is functional.
-
-The project is currently transitioning from the original development interface toward a Qt Quick-based application architecture.
-
-Real biosignal acquisition and EEG-based activity visualization are **planned research and development features and are not currently implemented**.
-
----
-
-## Disclaimer
-
-NeuroScan is an experimental software engineering and visualization project.
-
-It is **not a medical device**, does not provide medical diagnoses and should not be used for clinical decision-making.
-
-Any future brain-activity visualization derived from biosignals should be interpreted according to the limitations of the acquisition and signal-processing methods used.
-
----
-
-## Author
-
-Developed by **Kilian Berardino**.
+The source GLB is unchanged. Geometry is centered and normalized in memory for rendering, and the application applies its own shaders. The model's license applies to that asset and does not establish a license for the application's source code.
